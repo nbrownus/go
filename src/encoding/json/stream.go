@@ -167,7 +167,6 @@ func nonSpace(b []byte) bool {
 // An Encoder writes JSON values to an output stream.
 type Encoder struct {
 	w          io.Writer
-	err        error
 	escapeHTML bool
 
 	indentBuf    *bytes.Buffer
@@ -186,9 +185,6 @@ func NewEncoder(w io.Writer) *Encoder {
 // See the documentation for Marshal for details about the
 // conversion of Go values to JSON.
 func (enc *Encoder) Encode(v interface{}) error {
-	if enc.err != nil {
-		return enc.err
-	}
 	e := newEncodeState()
 	err := e.marshal(v, encOpts{escapeHTML: enc.escapeHTML})
 	if err != nil {
@@ -212,9 +208,7 @@ func (enc *Encoder) Encode(v interface{}) error {
 		}
 		b = enc.indentBuf.Bytes()
 	}
-	if _, err = enc.w.Write(b); err != nil {
-		enc.err = err
-	}
+	_, err = enc.w.Write(b)
 	encodeStatePool.Put(e)
 	return err
 }
